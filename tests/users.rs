@@ -129,3 +129,61 @@ async fn should_list_users_with_fields() {
     let response = assert_ok!(request.send().await);
     assert_eq!(response.users.len(), 2);
 }
+
+#[tokio::test]
+async fn should_get_user() {
+    let mock = MockApi::new().await;
+    let user_id = "auth0|xxxyyyzz";
+    matcher_mgmt_users_get(&mock, user_id)
+        .respond_with(response_mgmt_user())
+        .mount(&mock)
+        .await;
+
+    let mgmt = assert_ok!(ManagementApi::new(&mock.domain(), mock.api_token()));
+    let users = mgmt.users();
+
+    let request = assert_ok!(users.get(user_id).build());
+    assert_ok!(request.send().await);
+}
+
+#[tokio::test]
+async fn should_get_user_with_fields_given_separately() {
+    let mock = MockApi::new().await;
+    let user_id = "auth0|xxxyyyzz";
+    matcher_mgmt_users_get(&mock, user_id)
+        .and(matchers::query_param("fields", "some,random,fields"))
+        .respond_with(response_mgmt_user())
+        .mount(&mock)
+        .await;
+
+    let mgmt = assert_ok!(ManagementApi::new(&mock.domain(), mock.api_token()));
+    let users = mgmt.users();
+
+    let request = assert_ok!(users
+        .get(user_id)
+        .field("some")
+        .field("random")
+        .field("fields")
+        .build());
+    assert_ok!(request.send().await);
+}
+
+#[tokio::test]
+async fn should_get_user_with_fields() {
+    let mock = MockApi::new().await;
+    let user_id = "auth0|xxxyyyzz";
+    matcher_mgmt_users_get(&mock, user_id)
+        .and(matchers::query_param("fields", "some,random,fields"))
+        .respond_with(response_mgmt_user())
+        .mount(&mock)
+        .await;
+
+    let mgmt = assert_ok!(ManagementApi::new(&mock.domain(), mock.api_token()));
+    let users = mgmt.users();
+
+    let request = assert_ok!(users
+        .get(user_id)
+        .fields(["some", "random", "fields"])
+        .build());
+    assert_ok!(request.send().await);
+}

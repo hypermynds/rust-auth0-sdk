@@ -4,6 +4,7 @@ use fake::Fake;
 use http::header;
 use wiremock::{matchers, Mock, MockBuilder, MockServer, ResponseTemplate};
 
+const MGMT_USER: &[u8] = include_bytes!("../testdata/management/user.json");
 const MGMT_USERS_LIST: &[u8] = include_bytes!("../testdata/management/users_list.json");
 const MGMT_USERS_PAGED_LIST: &[u8] = include_bytes!("../testdata/management/users_paged_list.json");
 
@@ -39,6 +40,10 @@ impl Deref for MockApi {
     }
 }
 
+pub fn response_mgmt_user() -> ResponseTemplate {
+    json_response_template(MGMT_USER)
+}
+
 pub fn response_mgmt_users_list() -> ResponseTemplate {
     json_response_template(MGMT_USERS_LIST)
 }
@@ -50,6 +55,15 @@ pub fn response_mgmt_users_paged_list() -> ResponseTemplate {
 pub fn matcher_mgmt_users_list(api: &MockApi) -> MockBuilder {
     Mock::given(matchers::method("GET"))
         .and(matchers::path("/api/v2/users"))
+        .and(matchers::header(
+            header::AUTHORIZATION,
+            format!("Bearer {}", api.api_token()),
+        ))
+}
+
+pub fn matcher_mgmt_users_get(api: &MockApi, id: &str) -> MockBuilder {
+    Mock::given(matchers::method("GET"))
+        .and(matchers::path(format!("/api/v2/users/{id}")))
         .and(matchers::header(
             header::AUTHORIZATION,
             format!("Bearer {}", api.api_token()),
