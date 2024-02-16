@@ -22,14 +22,18 @@ pub struct Users {
 }
 
 impl Users {
-    /// Retrieve the list of users.
+    /// Retrieve the list of users, implementation of [`/api/v2/users`] endpoint.
+    ///
+    /// [`/api/v2/users`]: https://auth0.com/docs/api/management/v2/users/get-users
     pub fn list(&self) -> ListUsersBuilder {
         let mut builder = ListUsersBuilder::default();
         builder.api(self.api.clone());
         builder
     }
 
-    /// Retrieve user details.
+    /// Retrieve user details, implementation of [`/api/v2/users/{id}`] endpoint.
+    ///
+    /// [`/api/v2/users/{id}`]: https://auth0.com/docs/api/management/v2/users/get-users-by-id
     pub fn get<T: Into<String>>(&self, id: T) -> GetUserBuilder {
         let mut builder = GetUserBuilder::default();
         builder.api(self.api.clone()).id(id);

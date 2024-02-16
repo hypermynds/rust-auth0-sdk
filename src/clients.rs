@@ -13,7 +13,9 @@ pub struct Clients {
 }
 
 impl Clients {
-    /// Retrieve the list of clients.
+    /// Retrieve the list of clients, implementation of [`/api/v2/clients`] endpoint.
+    ///
+    /// [`/api/v2/clients`]: https://auth0.com/docs/api/management/v2/clients/get-clients
     pub fn list(&self) -> ListClientsBuilder {
         let mut builder = ListClientsBuilder::default();
         builder.api(self.api.clone());
