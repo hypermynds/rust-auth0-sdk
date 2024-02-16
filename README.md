@@ -1,6 +1,8 @@
 # auth0-sdk
 
-![Apache 2.0 OR MIT licensed](https://img.shields.io/badge/license-Apache2.0%2FMIT-blue.svg)
+![Apache 2.0 OR MIT licensed][license-badge]
+
+[license-badge]: https://img.shields.io/badge/license-Apache2.0%2FMIT-blue.svg
 
 Rust client for the Auth0 Authentication and Management API.
 

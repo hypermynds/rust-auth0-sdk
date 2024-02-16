@@ -10,6 +10,7 @@ use serde_with::{formats::SpaceSeparator, serde_as, StringWithSeparator};
 
 use crate::models;
 
+const GET_DEVICE_CODE_ENDPOINT: &str = "/oauth/device/code";
 const GET_TOKEN_ENDPOINT: &str = "/oauth/token";
 const GRANT_TYPE_CLIENT_CREDENTIALS: &str = "client_credentials";
 const GRANT_TYPE_RESOURCE_OWNED_PASSWORD: &str = "http://auth0.com/oauth/grant-type/password-realm";
@@ -83,12 +84,23 @@ impl AuthenticationApi {
             .map_err(Into::into)
     }
 
-    /// Request an access using the client's credentials, implementation of [client credentials
+    /// Request a device code for the application, implementation of [device authorization flow].
+    ///
+    /// [device authorization flow]: https://auth0.com/docs/api/authentication?shell#device-authorization-flow
+    pub fn get_device_code(&self) -> GetDeviceCodeBuilder {
+        let mut builder = GetDeviceCodeBuilder::default();
+        builder
+            .api(self.clone())
+            .client_id(self.0.client_id.clone());
+        builder
+    }
+
+    /// Request an access token using the client's credentials, implementation of [client credentials
     /// flow].
     ///
     /// [client credentials flow]: https://auth0.com/docs/api/authentication#client-credentials-flow
-    pub fn get_token<T: Into<String>>(&self, audience: T) -> Result<ClientCredentialsFlow<'_>> {
-        Ok(ClientCredentialsFlow {
+    pub fn get_token<T: Into<String>>(&self, audience: T) -> Result<GetToken<'_>> {
+        Ok(GetToken {
             api: self,
             grant_type: GRANT_TYPE_CLIENT_CREDENTIALS,
             client_id: &self.0.client_id,
@@ -101,15 +113,15 @@ impl AuthenticationApi {
         })
     }
 
-    /// Log in using the user's credentials, implementation of [resource owner password].
+    /// Request an access token using the user's credentials, implementation of [resource owner password].
     ///
     /// [resource owner password]: https://auth0.com/docs/api/authentication?javascript#resource-owner-password
-    pub fn login<U, P>(&self, username: U, password: P) -> ResourceOwnerPasswordBuilder
+    pub fn login<U, P>(&self, username: U, password: P) -> UserLoginBuilder
     where
         U: Into<String>,
         P: Into<String>,
     {
-        let mut builder = ResourceOwnerPasswordBuilder::default();
+        let mut builder = UserLoginBuilder::default();
         builder
             .api(self.clone())
             .grant_type(GRANT_TYPE_RESOURCE_OWNED_PASSWORD)
@@ -121,9 +133,62 @@ impl AuthenticationApi {
     }
 }
 
+/// Get a device code for an application.
+#[serde_as]
+#[serde_with::apply(
+    Option => #[serde(skip_serializing_if = "Option::is_none")],
+    Vec => #[serde(skip_serializing_if = "Vec::is_empty")],
+)]
+#[derive(Builder, Debug, Serialize)]
+#[builder(build_fn(private, error = "anyhow::Error"))]
+pub struct GetDeviceCode {
+    #[builder(private)]
+    #[serde(skip)]
+    api: AuthenticationApi,
+    /// Application's Client ID.
+    #[builder(private)]
+    client_id: String,
+    /// The unique identifier of the target API you want to access.
+    #[builder(setter(strip_option, into), default)]
+    audience: Option<String>,
+    /// The scopes for which you want to request authorization. These must be separated by a space.
+    #[serde_as(as = "StringWithSeparator::<SpaceSeparator, String>")]
+    #[builder(setter(custom), default)]
+    scope: Vec<String>,
+}
+
+impl GetDeviceCodeBuilder {
+    /// Send the API request.
+    pub async fn send(&self) -> Result<models::DeviceCode> {
+        let request = self.build()?;
+        request
+            .api
+            .http_post(GET_DEVICE_CODE_ENDPOINT, &request)
+            .await
+    }
+
+    /// Append one element to the list of scope.
+    pub fn scope<T: Into<String>>(&mut self, scope: T) -> &mut Self {
+        self.scope.get_or_insert_with(Vec::new).push(scope.into());
+        self
+    }
+
+    /// Append the contents of iterator to the list of scopes.
+    pub fn scopes<I, T>(&mut self, iter: I) -> &mut Self
+    where
+        I: IntoIterator<Item = T>,
+        T: Into<String>,
+    {
+        self.scope
+            .get_or_insert_with(Vec::new)
+            .extend(iter.into_iter().map(Into::into));
+        self
+    }
+}
+
 /// Get an access token by using the client's credentials.
 #[derive(Debug, Serialize)]
-pub struct ClientCredentialsFlow<'a> {
+pub struct GetToken<'a> {
     #[serde(skip)]
     api: &'a AuthenticationApi,
     /// Denotes the flow you are using.
@@ -136,7 +201,7 @@ pub struct ClientCredentialsFlow<'a> {
     audience: String,
 }
 
-impl<'a> ClientCredentialsFlow<'a> {
+impl<'a> GetToken<'a> {
     /// Send the API request.
     pub async fn send(&self) -> Result<models::AccessToken> {
         self.api.http_post(GET_TOKEN_ENDPOINT, self).await
@@ -151,7 +216,7 @@ impl<'a> ClientCredentialsFlow<'a> {
 )]
 #[derive(Builder, Debug, Serialize)]
 #[builder(build_fn(private, error = "anyhow::Error"))]
-pub struct ResourceOwnerPassword {
+pub struct UserLogin {
     #[builder(private)]
     #[serde(skip)]
     api: AuthenticationApi,
@@ -183,7 +248,7 @@ pub struct ResourceOwnerPassword {
     realm: Option<String>,
 }
 
-impl ResourceOwnerPasswordBuilder {
+impl UserLoginBuilder {
     /// Send the API request.
     pub async fn send(&self) -> Result<models::AccessToken> {
         let request = self.build()?;

@@ -1,0 +1,8 @@
+{
+  "device_code":"GmRh...k9eS",
+  "user_code":"WDJB-MJHT",
+  "verification_uri":"https://{yourDomain}/device",
+  "verification_uri_complete":"https://{yourDomain}/device?user_code=WDJB-MJHT",
+  "expires_in":900,
+  "interval":5
+}
