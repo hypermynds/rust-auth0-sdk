@@ -38,6 +38,11 @@ impl Deref for MockApi {
 
 // responses
 // ----------------------------------------------------------------------------
+pub fn response_mgmt_client() -> ResponseTemplate {
+    const BODY: &[u8] = include_bytes!("../../testdata/mgmt/client.json");
+    json_response_template(BODY)
+}
+
 pub fn response_mgmt_clients_list() -> ResponseTemplate {
     const BODY: &[u8] = include_bytes!("../../testdata/mgmt/clients_list.json");
     json_response_template(BODY)
@@ -68,6 +73,15 @@ pub fn response_mgmt_users_paged_list() -> ResponseTemplate {
 pub fn matcher_mgmt_clients_list(api: &MockApi) -> MockBuilder {
     Mock::given(matchers::method("GET"))
         .and(matchers::path("/api/v2/clients"))
+        .and(matchers::header(
+            header::AUTHORIZATION,
+            format!("Bearer {}", api.api_token()),
+        ))
+}
+
+pub fn matcher_mgmt_clients_get(api: &MockApi, id: &str) -> MockBuilder {
+    Mock::given(matchers::method("GET"))
+        .and(matchers::path(format!("/api/v2/clients/{id}")))
         .and(matchers::header(
             header::AUTHORIZATION,
             format!("Bearer {}", api.api_token()),

@@ -121,3 +121,61 @@ async fn should_list_clients_with_additional_properties() {
     let response = assert_ok!(request.send().await);
     assert_eq!(response.clients.len(), 2);
 }
+
+#[tokio::test]
+async fn should_get_client() {
+    let mock = MockApi::new().await;
+    let client_id = "My-Super-Application-Name";
+    matcher_mgmt_clients_get(&mock, client_id)
+        .respond_with(response_mgmt_client())
+        .mount(&mock)
+        .await;
+
+    let mgmt = assert_ok!(ManagementApi::new(&mock.domain(), mock.api_token()));
+    let clients = mgmt.clients();
+
+    let request = assert_ok!(clients.get(client_id).build());
+    assert_ok!(request.send().await);
+}
+
+#[tokio::test]
+async fn should_get_client_with_fields_given_separately() {
+    let mock = MockApi::new().await;
+    let client_id = "My-Super-Application-Name";
+    matcher_mgmt_clients_get(&mock, client_id)
+        .and(matchers::query_param("fields", "some,random,fields"))
+        .respond_with(response_mgmt_client())
+        .mount(&mock)
+        .await;
+
+    let mgmt = assert_ok!(ManagementApi::new(&mock.domain(), mock.api_token()));
+    let clients = mgmt.clients();
+
+    let request = assert_ok!(clients
+        .get(client_id)
+        .field("some")
+        .field("random")
+        .field("fields")
+        .build());
+    assert_ok!(request.send().await);
+}
+
+#[tokio::test]
+async fn should_get_client_with_fields() {
+    let mock = MockApi::new().await;
+    let client_id = "My-Super-Application-Name";
+    matcher_mgmt_clients_get(&mock, client_id)
+        .and(matchers::query_param("fields", "some,random,fields"))
+        .respond_with(response_mgmt_client())
+        .mount(&mock)
+        .await;
+
+    let mgmt = assert_ok!(ManagementApi::new(&mock.domain(), mock.api_token()));
+    let clients = mgmt.clients();
+
+    let request = assert_ok!(clients
+        .get(client_id)
+        .fields(["some", "random", "fields"])
+        .build());
+    assert_ok!(request.send().await);
+}

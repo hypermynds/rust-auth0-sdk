@@ -21,6 +21,15 @@ impl Clients {
         builder.api(self.api.clone());
         builder
     }
+
+    /// Retrieve client details, implementation of [`/api/v2/clients/{id}`] endpoint.
+    ///
+    /// [`/api/v2/clients/{id}`]: https://auth0.com/docs/api/management/v2/clients/get-clients-by-id
+    pub fn get<T: Into<String>>(&self, id: T) -> GetClientBuilder {
+        let mut builder = GetClientBuilder::default();
+        builder.api(self.api.clone()).id(id);
+        builder
+    }
 }
 
 /// Retrieve clients (applications and SSO integrations) matching provided filters.
@@ -131,6 +140,62 @@ impl ListClientsBuilder {
         T: Into<String>,
     {
         self.app_type
+            .get_or_insert_with(Vec::new)
+            .extend(iter.into_iter().map(Into::into));
+        self
+    }
+}
+
+/// Retrieve client details.
+#[serde_as]
+#[serde_with::apply(
+    Option => #[serde(skip_serializing_if = "Option::is_none")],
+    Vec => #[serde(skip_serializing_if = "Vec::is_empty")],
+)]
+#[derive(Builder, Debug, Serialize)]
+#[builder(build_fn(error = "anyhow::Error"))]
+pub struct GetClient {
+    #[builder(private)]
+    #[serde(skip)]
+    api: ManagementApi,
+    /// ID of the client to retrieve.
+    #[builder(private, setter(into))]
+    #[serde(skip)]
+    id: String,
+    /// List of fields to include or exclude.
+    #[serde_as(as = "StringWithSeparator::<CommaSeparator, String>")]
+    #[builder(setter(custom), default)]
+    fields: Vec<String>,
+    /// Whether specified fields are to be included.
+    #[builder(setter(strip_option), default)]
+    include_fields: Option<bool>,
+}
+
+/// Response for [`GetClient`].
+pub type GetClientResponse = models::Client;
+
+impl GetClient {
+    /// Send the API request.
+    pub async fn send(self) -> Result<GetClientResponse> {
+        let endpoint = format!("/api/v2/clients/{}", self.id);
+        self.api.http_get(&endpoint, &self).await
+    }
+}
+
+impl GetClientBuilder {
+    /// Append one element to the list of fields.
+    pub fn field<T: Into<String>>(&mut self, field: T) -> &mut Self {
+        self.fields.get_or_insert_with(Vec::new).push(field.into());
+        self
+    }
+
+    /// Append the contents of iterator to the list of fields.
+    pub fn fields<I, T>(&mut self, iter: I) -> &mut Self
+    where
+        I: IntoIterator<Item = T>,
+        T: Into<String>,
+    {
+        self.fields
             .get_or_insert_with(Vec::new)
             .extend(iter.into_iter().map(Into::into));
         self
