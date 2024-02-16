@@ -40,10 +40,10 @@ impl std::fmt::Debug for AuthenticationApi {
 
 impl AuthenticationApi {
     /// Create a new istance of the authentication API.
-    pub fn new(domain: &str, client_id: &str) -> Result<Self> {
+    pub fn new<T: Into<String>>(domain: &str, client_id: T) -> Result<Self> {
         let inner = Inner {
             domain: Url::parse(domain).context("Auth0 domain is not a valid url")?,
-            client_id: client_id.to_owned(),
+            client_id: client_id.into(),
             client_secret: None,
             client: Client::new(),
         };
@@ -51,11 +51,15 @@ impl AuthenticationApi {
     }
 
     /// Create a new istance of the authentication API.
-    pub fn with_client_secret(domain: &str, client_id: &str, client_secret: &str) -> Result<Self> {
+    pub fn with_client_secret<T, U>(domain: &str, client_id: T, client_secret: U) -> Result<Self>
+    where
+        T: Into<String>,
+        U: Into<String>,
+    {
         let inner = Inner {
             domain: Url::parse(domain).context("Auth0 domain is not a valid url")?,
-            client_id: client_id.to_owned(),
-            client_secret: Some(client_secret.to_owned()),
+            client_id: client_id.into(),
+            client_secret: Some(client_secret.into()),
             client: Client::new(),
         };
         Ok(Self(Arc::new(inner)))
@@ -97,15 +101,15 @@ impl AuthenticationApi {
         })
     }
 
-    /// Log in using the user's credentials, implementation of [resource owned password flow].
+    /// Log in using the user's credentials, implementation of [resource owner password].
     ///
-    /// [resource owned password flow]: https://auth0.com/docs/api/authentication?javascript#resource-owner-password
-    pub fn login<U, P>(&self, username: U, password: P) -> ResourceOwnerPasswordFlowBuilder
+    /// [resource owner password]: https://auth0.com/docs/api/authentication?javascript#resource-owner-password
+    pub fn login<U, P>(&self, username: U, password: P) -> ResourceOwnerPasswordBuilder
     where
         U: Into<String>,
         P: Into<String>,
     {
-        let mut builder = ResourceOwnerPasswordFlowBuilder::default();
+        let mut builder = ResourceOwnerPasswordBuilder::default();
         builder
             .api(self.clone())
             .grant_type(GRANT_TYPE_RESOURCE_OWNED_PASSWORD)
@@ -147,7 +151,7 @@ impl<'a> ClientCredentialsFlow<'a> {
 )]
 #[derive(Builder, Debug, Serialize)]
 #[builder(build_fn(private, error = "anyhow::Error"))]
-pub struct ResourceOwnerPasswordFlow {
+pub struct ResourceOwnerPassword {
     #[builder(private)]
     #[serde(skip)]
     api: AuthenticationApi,
@@ -179,7 +183,7 @@ pub struct ResourceOwnerPasswordFlow {
     realm: Option<String>,
 }
 
-impl ResourceOwnerPasswordFlowBuilder {
+impl ResourceOwnerPasswordBuilder {
     /// Send the API request.
     pub async fn send(&self) -> Result<models::AccessToken> {
         let request = self.build()?;
