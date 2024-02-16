@@ -39,7 +39,7 @@ impl Clients {
     Vec => #[serde(skip_serializing_if = "Vec::is_empty")],
 )]
 #[derive(Builder, Debug, Serialize)]
-#[builder(build_fn(error = "anyhow::Error"))]
+#[builder(build_fn(private, error = "anyhow::Error"))]
 pub struct ListClients {
     #[builder(private)]
     #[serde(skip)]
@@ -87,14 +87,15 @@ pub struct ListClientsResponse {
     pub total: Option<usize>,
 }
 
-impl ListClients {
+impl ListClientsBuilder {
     /// Send the API request.
-    pub async fn send(self) -> Result<ListClientsResponse> {
+    pub async fn send(&self) -> Result<ListClientsResponse> {
+        let request = self.build()?;
         let endpoint = "/api/v2/clients";
-        if self.include_totals.unwrap_or(false) {
-            self.api.http_get(endpoint, &self).await
+        if request.include_totals.unwrap_or(false) {
+            request.api.http_get(endpoint, &request).await
         } else {
-            let clients = self.api.http_get(endpoint, &self).await?;
+            let clients = request.api.http_get(endpoint, &request).await?;
             Ok(ListClientsResponse {
                 start: None,
                 limit: None,
@@ -104,9 +105,7 @@ impl ListClients {
             })
         }
     }
-}
 
-impl ListClientsBuilder {
     /// Append one element to the list of `fields`.
     pub fn field<T: Into<String>>(&mut self, field: T) -> &mut Self {
         self.fields.get_or_insert_with(Vec::new).push(field.into());
@@ -153,7 +152,7 @@ impl ListClientsBuilder {
     Vec => #[serde(skip_serializing_if = "Vec::is_empty")],
 )]
 #[derive(Builder, Debug, Serialize)]
-#[builder(build_fn(error = "anyhow::Error"))]
+#[builder(build_fn(private, error = "anyhow::Error"))]
 pub struct GetClient {
     #[builder(private)]
     #[serde(skip)]
@@ -174,15 +173,14 @@ pub struct GetClient {
 /// Response for [`GetClient`].
 pub type GetClientResponse = models::Client;
 
-impl GetClient {
-    /// Send the API request.
-    pub async fn send(self) -> Result<GetClientResponse> {
-        let endpoint = format!("/api/v2/clients/{}", self.id);
-        self.api.http_get(&endpoint, &self).await
-    }
-}
-
 impl GetClientBuilder {
+    /// Send the API request.
+    pub async fn send(&self) -> Result<GetClientResponse> {
+        let request = self.build()?;
+        let endpoint = format!("/api/v2/clients/{}", request.id);
+        request.api.http_get(&endpoint, &request).await
+    }
+
     /// Append one element to the list of fields.
     pub fn field<T: Into<String>>(&mut self, field: T) -> &mut Self {
         self.fields.get_or_insert_with(Vec::new).push(field.into());

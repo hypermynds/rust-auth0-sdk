@@ -15,8 +15,7 @@ async fn should_list_users() {
     let mgmt = assert_ok!(ManagementApi::new(&mock.domain(), mock.api_token()));
     let users = mgmt.users();
 
-    let request = assert_ok!(users.list().build());
-    let response = assert_ok!(request.send().await);
+    let response = assert_ok!(users.list().send().await);
     assert_eq!(response.users.len(), 2);
 }
 
@@ -33,8 +32,7 @@ async fn should_list_users_with_page() {
     let mgmt = assert_ok!(ManagementApi::new(&mock.domain(), mock.api_token()));
     let users = mgmt.users();
 
-    let request = assert_ok!(users.list().page(24).per_page(5).build());
-    let response = assert_ok!(request.send().await);
+    let response = assert_ok!(users.list().page(24).per_page(5).send().await);
     assert_eq!(response.users.len(), 2);
 }
 
@@ -50,8 +48,7 @@ async fn should_list_users_with_totals() {
     let mgmt = assert_ok!(ManagementApi::new(&mock.domain(), mock.api_token()));
     let users = mgmt.users();
 
-    let request = assert_ok!(users.list().include_totals(true).build());
-    let response = assert_ok!(request.send().await);
+    let response = assert_ok!(users.list().include_totals(true).send().await);
     assert_eq!(response.users.len(), 2);
     assert_some_eq!(response.start, 0);
     assert_some_eq!(response.length, 14);
@@ -71,8 +68,7 @@ async fn should_list_users_with_sort() {
     let mgmt = assert_ok!(ManagementApi::new(&mock.domain(), mock.api_token()));
     let users = mgmt.users();
 
-    let request = assert_ok!(users.list().sort("date:1").build());
-    let response = assert_ok!(request.send().await);
+    let response = assert_ok!(users.list().sort("date:1").send().await);
     assert_eq!(response.users.len(), 2);
 }
 
@@ -88,8 +84,7 @@ async fn should_list_users_with_query() {
     let mgmt = assert_ok!(ManagementApi::new(&mock.domain(), mock.api_token()));
     let users = mgmt.users();
 
-    let request = assert_ok!(users.list().query("email:\\*@gmail.com").build());
-    let response = assert_ok!(request.send().await);
+    let response = assert_ok!(users.list().query("email:\\*@gmail.com").send().await);
     assert_eq!(response.users.len(), 2);
 }
 
@@ -105,13 +100,15 @@ async fn should_list_users_with_fields_given_separately() {
     let mgmt = assert_ok!(ManagementApi::new(&mock.domain(), mock.api_token()));
     let users = mgmt.users();
 
-    let request = assert_ok!(users
-        .list()
-        .field("some")
-        .field("random")
-        .field("fields")
-        .build());
-    let response = assert_ok!(request.send().await);
+    let response = assert_ok!(
+        users
+            .list()
+            .field("some")
+            .field("random")
+            .field("fields")
+            .send()
+            .await
+    );
     assert_eq!(response.users.len(), 2);
 }
 
@@ -127,8 +124,13 @@ async fn should_list_users_with_fields() {
     let mgmt = assert_ok!(ManagementApi::new(&mock.domain(), mock.api_token()));
     let users = mgmt.users();
 
-    let request = assert_ok!(users.list().fields(["some", "random", "fields"]).build());
-    let response = assert_ok!(request.send().await);
+    let response = assert_ok!(
+        users
+            .list()
+            .fields(["some", "random", "fields"])
+            .send()
+            .await
+    );
     assert_eq!(response.users.len(), 2);
 }
 
@@ -144,8 +146,7 @@ async fn should_get_user() {
     let mgmt = assert_ok!(ManagementApi::new(&mock.domain(), mock.api_token()));
     let users = mgmt.users();
 
-    let request = assert_ok!(users.get(user_id).build());
-    assert_ok!(request.send().await);
+    assert_ok!(users.get(user_id).send().await);
 }
 
 #[tokio::test]
@@ -161,13 +162,15 @@ async fn should_get_user_with_fields_given_separately() {
     let mgmt = assert_ok!(ManagementApi::new(&mock.domain(), mock.api_token()));
     let users = mgmt.users();
 
-    let request = assert_ok!(users
-        .get(user_id)
-        .field("some")
-        .field("random")
-        .field("fields")
-        .build());
-    assert_ok!(request.send().await);
+    assert_ok!(
+        users
+            .get(user_id)
+            .field("some")
+            .field("random")
+            .field("fields")
+            .send()
+            .await
+    );
 }
 
 #[tokio::test]
@@ -183,9 +186,11 @@ async fn should_get_user_with_fields() {
     let mgmt = assert_ok!(ManagementApi::new(&mock.domain(), mock.api_token()));
     let users = mgmt.users();
 
-    let request = assert_ok!(users
-        .get(user_id)
-        .fields(["some", "random", "fields"])
-        .build());
-    assert_ok!(request.send().await);
+    assert_ok!(
+        users
+            .get(user_id)
+            .fields(["some", "random", "fields"])
+            .send()
+            .await
+    );
 }

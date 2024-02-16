@@ -15,8 +15,7 @@ async fn should_list_clients_without_filter() {
     let mgmt = assert_ok!(ManagementApi::new(&mock.domain(), mock.api_token()));
     let clients = mgmt.clients();
 
-    let request = assert_ok!(clients.list().build());
-    let response = assert_ok!(request.send().await);
+    let response = assert_ok!(clients.list().send().await);
     assert_eq!(response.clients.len(), 2);
 }
 
@@ -33,8 +32,7 @@ async fn should_list_clients_with_page() {
     let mgmt = assert_ok!(ManagementApi::new(&mock.domain(), mock.api_token()));
     let clients = mgmt.clients();
 
-    let request = assert_ok!(clients.list().page(23).per_page(5).build());
-    let response = assert_ok!(request.send().await);
+    let response = assert_ok!(clients.list().page(23).per_page(5).send().await);
     assert_eq!(response.clients.len(), 2);
 }
 
@@ -50,8 +48,7 @@ async fn should_list_clients_with_totals() {
     let mgmt = assert_ok!(ManagementApi::new(&mock.domain(), mock.api_token()));
     let clients = mgmt.clients();
 
-    let request = assert_ok!(clients.list().include_totals(true).build());
-    let response = assert_ok!(request.send().await);
+    let response = assert_ok!(clients.list().include_totals(true).send().await);
     assert_eq!(response.clients.len(), 2);
     assert_some_eq!(response.start, 0);
     assert_some_eq!(response.length, 14);
@@ -71,13 +68,15 @@ async fn should_list_clients_with_fields_given_separately() {
     let mgmt = assert_ok!(ManagementApi::new(&mock.domain(), mock.api_token()));
     let clients = mgmt.clients();
 
-    let request = assert_ok!(clients
-        .list()
-        .field("some")
-        .field("random")
-        .field("fields")
-        .build());
-    let response = assert_ok!(request.send().await);
+    let response = assert_ok!(
+        clients
+            .list()
+            .field("some")
+            .field("random")
+            .field("fields")
+            .send()
+            .await
+    );
     assert_eq!(response.clients.len(), 2);
 }
 
@@ -93,8 +92,13 @@ async fn should_list_clients_with_fields() {
     let mgmt = assert_ok!(ManagementApi::new(&mock.domain(), mock.api_token()));
     let clients = mgmt.clients();
 
-    let request = assert_ok!(clients.list().fields(["some", "random", "fields"]).build());
-    let response = assert_ok!(request.send().await);
+    let response = assert_ok!(
+        clients
+            .list()
+            .fields(["some", "random", "fields"])
+            .send()
+            .await
+    );
     assert_eq!(response.clients.len(), 2);
 }
 
@@ -112,13 +116,15 @@ async fn should_list_clients_with_additional_properties() {
     let mgmt = assert_ok!(ManagementApi::new(&mock.domain(), mock.api_token()));
     let clients = mgmt.clients();
 
-    let request = assert_ok!(clients
-        .list()
-        .app_types(["regular_web", "native"])
-        .is_first_party(true)
-        .is_global(true)
-        .build());
-    let response = assert_ok!(request.send().await);
+    let response = assert_ok!(
+        clients
+            .list()
+            .app_types(["regular_web", "native"])
+            .is_first_party(true)
+            .is_global(true)
+            .send()
+            .await
+    );
     assert_eq!(response.clients.len(), 2);
 }
 
@@ -134,8 +140,7 @@ async fn should_get_client() {
     let mgmt = assert_ok!(ManagementApi::new(&mock.domain(), mock.api_token()));
     let clients = mgmt.clients();
 
-    let request = assert_ok!(clients.get(client_id).build());
-    assert_ok!(request.send().await);
+    assert_ok!(clients.get(client_id).send().await);
 }
 
 #[tokio::test]
@@ -151,13 +156,15 @@ async fn should_get_client_with_fields_given_separately() {
     let mgmt = assert_ok!(ManagementApi::new(&mock.domain(), mock.api_token()));
     let clients = mgmt.clients();
 
-    let request = assert_ok!(clients
-        .get(client_id)
-        .field("some")
-        .field("random")
-        .field("fields")
-        .build());
-    assert_ok!(request.send().await);
+    assert_ok!(
+        clients
+            .get(client_id)
+            .field("some")
+            .field("random")
+            .field("fields")
+            .send()
+            .await
+    );
 }
 
 #[tokio::test]
@@ -173,9 +180,11 @@ async fn should_get_client_with_fields() {
     let mgmt = assert_ok!(ManagementApi::new(&mock.domain(), mock.api_token()));
     let clients = mgmt.clients();
 
-    let request = assert_ok!(clients
-        .get(client_id)
-        .fields(["some", "random", "fields"])
-        .build());
-    assert_ok!(request.send().await);
+    assert_ok!(
+        clients
+            .get(client_id)
+            .fields(["some", "random", "fields"])
+            .send()
+            .await
+    );
 }

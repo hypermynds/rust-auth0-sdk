@@ -48,7 +48,7 @@ impl Users {
     Vec => #[serde(skip_serializing_if = "Vec::is_empty")],
 )]
 #[derive(Builder, Debug, Serialize)]
-#[builder(build_fn(error = "anyhow::Error"))]
+#[builder(build_fn(private, error = "anyhow::Error"))]
 pub struct ListUsers {
     #[builder(private)]
     #[serde(skip)]
@@ -98,14 +98,15 @@ pub struct ListUsersResponse {
     pub total: Option<usize>,
 }
 
-impl ListUsers {
+impl ListUsersBuilder {
     /// Send the API request.
-    pub async fn send(self) -> Result<ListUsersResponse> {
+    pub async fn send(&self) -> Result<ListUsersResponse> {
+        let request = self.build()?;
         let endpoint = "/api/v2/users";
-        if self.include_totals.unwrap_or(false) {
-            self.api.http_get(endpoint, &self).await
+        if request.include_totals.unwrap_or(false) {
+            request.api.http_get(endpoint, &request).await
         } else {
-            let users = self.api.http_get(endpoint, &self).await?;
+            let users = request.api.http_get(endpoint, &request).await?;
             Ok(ListUsersResponse {
                 start: None,
                 limit: None,
@@ -115,9 +116,7 @@ impl ListUsers {
             })
         }
     }
-}
 
-impl ListUsersBuilder {
     /// Append one element to the list of fields.
     pub fn field<T: Into<String>>(&mut self, field: T) -> &mut Self {
         self.fields.get_or_insert_with(Vec::new).push(field.into());
@@ -144,7 +143,7 @@ impl ListUsersBuilder {
     Vec => #[serde(skip_serializing_if = "Vec::is_empty")],
 )]
 #[derive(Builder, Debug, Serialize)]
-#[builder(build_fn(error = "anyhow::Error"))]
+#[builder(build_fn(private, error = "anyhow::Error"))]
 pub struct GetUser {
     #[builder(private)]
     #[serde(skip)]
@@ -165,15 +164,14 @@ pub struct GetUser {
 /// Response for [`GetUser`].
 pub type GetUserResponse = models::User;
 
-impl GetUser {
-    /// Send the API request.
-    pub async fn send(self) -> Result<GetUserResponse> {
-        let endpoint = format!("/api/v2/users/{}", self.id);
-        self.api.http_get(&endpoint, &self).await
-    }
-}
-
 impl GetUserBuilder {
+    /// Send the API request.
+    pub async fn send(&self) -> Result<GetUserResponse> {
+        let request = self.build()?;
+        let endpoint = format!("/api/v2/users/{}", request.id);
+        request.api.http_get(&endpoint, &request).await
+    }
+
     /// Append one element to the list of fields.
     pub fn field<T: Into<String>>(&mut self, field: T) -> &mut Self {
         self.fields.get_or_insert_with(Vec::new).push(field.into());

@@ -9,8 +9,8 @@ use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{Clients, Users};
 
-#[derive(Clone)]
 /// Implementation of the management API.
+#[derive(Clone)]
 pub struct ManagementApi(Arc<Inner>);
 
 struct Inner {
@@ -20,6 +20,14 @@ struct Inner {
     api_token: HeaderValue,
     /// Default HTTP client.
     client: Client,
+}
+
+impl std::fmt::Debug for ManagementApi {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ManagementApi")
+            .field("domain", &self.0.domain)
+            .finish()
+    }
 }
 
 impl ManagementApi {
@@ -71,13 +79,5 @@ impl ManagementApi {
             .json()
             .await
             .map_err(Into::into)
-    }
-}
-
-impl std::fmt::Debug for ManagementApi {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("ManagementApi")
-            .field("domain", &self.0.domain)
-            .finish()
     }
 }
