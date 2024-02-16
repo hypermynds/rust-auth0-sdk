@@ -1,6 +1,15 @@
 #[doc(inline)]
-pub use self::{identity::Identity, profile_data::ProfileData, user::User};
+pub use self::{
+    client::Client, encryption_key::EncryptionKey, identity::Identity,
+    jwt_configuration::JwtConfiguration, oidc_logout_config::OidcLogoutConfig,
+    profile_data::ProfileData, signing_keys::SigningKey, user::User,
+};
 
+mod client;
+mod encryption_key;
 mod identity;
+mod jwt_configuration;
+mod oidc_logout_config;
 mod profile_data;
+mod signing_keys;
 mod user;

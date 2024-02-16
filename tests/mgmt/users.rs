@@ -2,9 +2,7 @@ use auth0_sdk::ManagementApi;
 use claym::*;
 use wiremock::matchers;
 
-use self::mock::*;
-
-mod mock;
+use crate::mock::*;
 
 #[tokio::test]
 async fn should_list_users() {
@@ -55,6 +53,10 @@ async fn should_list_users_with_totals() {
     let request = assert_ok!(users.list().include_totals(true).build());
     let response = assert_ok!(request.send().await);
     assert_eq!(response.users.len(), 2);
+    assert_some_eq!(response.start, 0);
+    assert_some_eq!(response.length, 14);
+    assert_some_eq!(response.total, 14);
+    assert_some_eq!(response.limit, 50);
 }
 
 #[tokio::test]

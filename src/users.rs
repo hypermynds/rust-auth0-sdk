@@ -116,8 +116,7 @@ impl ListUsers {
 impl ListUsersBuilder {
     /// Append one element to the list of fields.
     pub fn field<T: Into<String>>(&mut self, field: T) -> &mut Self {
-        let fields = self.fields.get_or_insert_with(Vec::new);
-        fields.push(field.into());
+        self.fields.get_or_insert_with(Vec::new).push(field.into());
         self
     }
 
@@ -127,8 +126,9 @@ impl ListUsersBuilder {
         I: IntoIterator<Item = T>,
         T: Into<String>,
     {
-        let fields = self.fields.get_or_insert_with(Vec::new);
-        fields.extend(iter.into_iter().map(Into::into));
+        self.fields
+            .get_or_insert_with(Vec::new)
+            .extend(iter.into_iter().map(Into::into));
         self
     }
 }
@@ -172,8 +172,7 @@ impl GetUser {
 impl GetUserBuilder {
     /// Append one element to the list of fields.
     pub fn field<T: Into<String>>(&mut self, field: T) -> &mut Self {
-        let fields = self.fields.get_or_insert_with(Vec::new);
-        fields.push(field.into());
+        self.fields.get_or_insert_with(Vec::new).push(field.into());
         self
     }
 
@@ -183,8 +182,9 @@ impl GetUserBuilder {
         I: IntoIterator<Item = T>,
         T: Into<String>,
     {
-        let fields = self.fields.get_or_insert_with(Vec::new);
-        fields.extend(iter.into_iter().map(Into::into));
+        self.fields
+            .get_or_insert_with(Vec::new)
+            .extend(iter.into_iter().map(Into::into));
         self
     }
 }

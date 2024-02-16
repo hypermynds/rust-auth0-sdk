@@ -12,15 +12,18 @@ pub struct Identity {
     /// The type of identity provider
     pub provider: String,
     /// Whether this identity is from a social provider.
-    #[serde(rename = "isSocial")]
+    #[serde(rename = "isSocial", default)]
     pub is_social: Option<bool>,
     /// IDP access token returned only if scope read:user_idp_tokens is defined.
+    #[serde(default)]
     pub access_token: Option<String>,
     /// IDP access token secret returned only if scope read:user_idp_tokens is defined.
+    #[serde(default)]
     pub access_token_secret: Option<String>,
     /// IDP refresh token returned only if scope read:user_idp_tokens is defined.
+    #[serde(default)]
     pub refresh_token: Option<String>,
     /// Contains additional profile information for linked identities.
-    #[serde(rename = "profileData")]
+    #[serde(rename = "profileData", default)]
     pub profile_data: Option<ProfileData>,
 }

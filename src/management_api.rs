@@ -7,7 +7,7 @@ use reqwest::{
 };
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::Users;
+use crate::{Clients, Users};
 
 #[derive(Clone)]
 /// Implementation of the management API.
@@ -38,6 +38,12 @@ impl ManagementApi {
     pub fn users(&self) -> Users {
         let api = self.clone();
         Users { api }
+    }
+
+    /// Contains all the methods to call the `/clients` endpoints.
+    pub fn clients(&self) -> Clients {
+        let api = self.clone();
+        Clients { api }
     }
 
     /// Send a get request to the given endpoint.

@@ -4,10 +4,6 @@ use fake::Fake;
 use http::header;
 use wiremock::{matchers, Mock, MockBuilder, MockServer, ResponseTemplate};
 
-const MGMT_USER: &[u8] = include_bytes!("../testdata/management/user.json");
-const MGMT_USERS_LIST: &[u8] = include_bytes!("../testdata/management/users_list.json");
-const MGMT_USERS_PAGED_LIST: &[u8] = include_bytes!("../testdata/management/users_paged_list.json");
-
 pub struct MockApi {
     api_token: String,
     server: MockServer,
@@ -40,16 +36,42 @@ impl Deref for MockApi {
     }
 }
 
+// responses
+// ----------------------------------------------------------------------------
+pub fn response_mgmt_clients_list() -> ResponseTemplate {
+    const BODY: &[u8] = include_bytes!("../../testdata/mgmt/clients_list.json");
+    json_response_template(BODY)
+}
+
+pub fn response_mgmt_clients_paged_list() -> ResponseTemplate {
+    const BODY: &[u8] = include_bytes!("../../testdata/mgmt/clients_paged_list.json");
+    json_response_template(BODY)
+}
+
 pub fn response_mgmt_user() -> ResponseTemplate {
-    json_response_template(MGMT_USER)
+    const BODY: &[u8] = include_bytes!("../../testdata/mgmt/user.json");
+    json_response_template(BODY)
 }
 
 pub fn response_mgmt_users_list() -> ResponseTemplate {
-    json_response_template(MGMT_USERS_LIST)
+    const BODY: &[u8] = include_bytes!("../../testdata/mgmt/users_list.json");
+    json_response_template(BODY)
 }
 
 pub fn response_mgmt_users_paged_list() -> ResponseTemplate {
-    json_response_template(MGMT_USERS_PAGED_LIST)
+    const BODY: &[u8] = include_bytes!("../../testdata/mgmt/users_paged_list.json");
+    json_response_template(BODY)
+}
+
+// matchers
+// ----------------------------------------------------------------------------
+pub fn matcher_mgmt_clients_list(api: &MockApi) -> MockBuilder {
+    Mock::given(matchers::method("GET"))
+        .and(matchers::path("/api/v2/clients"))
+        .and(matchers::header(
+            header::AUTHORIZATION,
+            format!("Bearer {}", api.api_token()),
+        ))
 }
 
 pub fn matcher_mgmt_users_list(api: &MockApi) -> MockBuilder {
