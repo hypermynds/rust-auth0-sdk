@@ -2,7 +2,7 @@
 
 ![Apache 2.0 OR MIT licensed](https://img.shields.io/badge/license-Apache2.0%2FMIT-blue.svg)
 
-OpenTelemetry layer for HTTP/gRPC services.
+Rust client for the Auth0 Management API.
 
 ## License
 
