@@ -7,6 +7,8 @@ use serde_with::{formats::CommaSeparator, serde_as, StringWithSeparator};
 
 use crate::{models, ManagementApi};
 
+const USERS_ENDPOINT: &str = "/api/v2/users";
+
 /// Search engine version.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "lowercase")]
@@ -102,11 +104,10 @@ impl ListUsersBuilder {
     /// Send the API request.
     pub async fn send(&self) -> Result<ListUsersResponse> {
         let request = self.build()?;
-        let endpoint = "/api/v2/users";
         if request.include_totals.unwrap_or(false) {
-            request.api.http_get(endpoint, &request).await
+            request.api.http_get(USERS_ENDPOINT, &request).await
         } else {
-            let users = request.api.http_get(endpoint, &request).await?;
+            let users = request.api.http_get(USERS_ENDPOINT, &request).await?;
             Ok(ListUsersResponse {
                 start: None,
                 limit: None,
@@ -168,7 +169,7 @@ impl GetUserBuilder {
     /// Send the API request.
     pub async fn send(&self) -> Result<GetUserResponse> {
         let request = self.build()?;
-        let endpoint = format!("/api/v2/users/{}", request.id);
+        let endpoint = format!("{}/{}", USERS_ENDPOINT, request.id);
         request.api.http_get(&endpoint, &request).await
     }
 

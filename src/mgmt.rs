@@ -3,7 +3,7 @@ use std::sync::Arc;
 use anyhow::{Context, Result};
 use reqwest::{
     header::{self, HeaderValue},
-    Client, Method, Request, Url,
+    Client, Url,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -55,25 +55,17 @@ impl ManagementApi {
     }
 
     /// Send a get request to the given endpoint.
-    pub(crate) async fn http_get<Q, T>(&self, endpoint: &str, query: Q) -> Result<T>
+    pub(crate) async fn http_get<Q, T>(&self, endpoint: &str, query: &Q) -> Result<T>
     where
         Q: Serialize,
         T: DeserializeOwned,
     {
-        let mut url = self.0.domain.join(endpoint)?;
-        let query = serde_urlencoded::to_string(query)?;
-        if !query.is_empty() {
-            url.set_query(Some(&query));
-        }
-
-        let mut request = Request::new(Method::GET, url);
-        request
-            .headers_mut()
-            .insert(header::AUTHORIZATION, self.0.api_token.clone());
-
         self.0
             .client
-            .execute(request)
+            .get(self.0.domain.join(endpoint)?)
+            .query(query)
+            .header(header::AUTHORIZATION, self.0.api_token.clone())
+            .send()
             .await?
             .error_for_status()?
             .json()

@@ -7,6 +7,8 @@ use serde_with::{formats::CommaSeparator, serde_as, StringWithSeparator};
 
 use crate::{models, ManagementApi};
 
+const CLIENTS_ENDPOINT: &str = "/api/v2/clients";
+
 /// This struct provides an implementation of the Clients methods of the Management API.
 pub struct Clients {
     pub(crate) api: ManagementApi,
@@ -91,11 +93,10 @@ impl ListClientsBuilder {
     /// Send the API request.
     pub async fn send(&self) -> Result<ListClientsResponse> {
         let request = self.build()?;
-        let endpoint = "/api/v2/clients";
         if request.include_totals.unwrap_or(false) {
-            request.api.http_get(endpoint, &request).await
+            request.api.http_get(CLIENTS_ENDPOINT, &request).await
         } else {
-            let clients = request.api.http_get(endpoint, &request).await?;
+            let clients = request.api.http_get(CLIENTS_ENDPOINT, &request).await?;
             Ok(ListClientsResponse {
                 start: None,
                 limit: None,
@@ -177,7 +178,7 @@ impl GetClientBuilder {
     /// Send the API request.
     pub async fn send(&self) -> Result<GetClientResponse> {
         let request = self.build()?;
-        let endpoint = format!("/api/v2/clients/{}", request.id);
+        let endpoint = format!("{}/{}", CLIENTS_ENDPOINT, request.id);
         request.api.http_get(&endpoint, &request).await
     }
 

@@ -1,10 +1,11 @@
 #[doc(inline)]
 pub use self::{
-    client::Client, encryption_key::EncryptionKey, identity::Identity,
+    access_token::AccessToken, client::Client, encryption_key::EncryptionKey, identity::Identity,
     jwt_configuration::JwtConfiguration, oidc_logout_config::OidcLogoutConfig,
     profile_data::ProfileData, signing_keys::SigningKey, user::User,
 };
 
+mod access_token;
 mod client;
 mod encryption_key;
 mod identity;
