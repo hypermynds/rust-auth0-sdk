@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, ensure, Context, Result};
 use derive_builder::Builder;
 use reqwest::{Client, Url};
 use serde::{de::DeserializeOwned, Serialize};
@@ -14,6 +14,7 @@ const GET_DEVICE_CODE_ENDPOINT: &str = "/oauth/device/code";
 const GET_TOKEN_ENDPOINT: &str = "/oauth/token";
 const GRANT_TYPE_CLIENT_CREDENTIALS: &str = "client_credentials";
 const GRANT_TYPE_RESOURCE_OWNED_PASSWORD: &str = "http://auth0.com/oauth/grant-type/password-realm";
+const GRANT_TYPE_AUTHORIZATION_CODE: &str = "authorization_code";
 
 /// Implementation of the authentication API.
 #[derive(Clone)]
@@ -113,6 +114,48 @@ impl AuthenticationApi {
         })
     }
 
+    /// Request an access token using an authorization token, implementation of [authorization code
+    /// flow].
+    ///
+    /// [authorization code flow]: https://auth0.com/docs/api/authentication?http#authorization-code-flow47
+    pub fn get_token_with_auth_code<T: Into<String>>(
+        &self,
+        code: T,
+    ) -> Result<AuthorizationCodeLoginBuilder> {
+        ensure!(self.0.client_secret.is_some(), "Missing client_secret");
+        let mut builder = AuthorizationCodeLoginBuilder::default();
+        builder
+            .api(self.clone())
+            .grant_type(GRANT_TYPE_AUTHORIZATION_CODE)
+            .client_id(self.0.client_id.clone())
+            .client_secret(self.0.client_secret.clone())
+            .code(code);
+        Ok(builder)
+    }
+
+    /// Request an access token using an authorization token with PKCE, implementation of
+    /// [authorization code flow with PKCE].
+    ///
+    /// [authorization code flow with PKCE]: https://auth0.com/docs/api/authentication?http#authorization-code-flow-with-pkce48
+    pub fn get_token_with_auth_code_pkce<T, U>(
+        &self,
+        code: T,
+        code_verifier: U,
+    ) -> Result<AuthorizationCodeLoginBuilder>
+    where
+        T: Into<String>,
+        U: Into<String>,
+    {
+        let mut builder = AuthorizationCodeLoginBuilder::default();
+        builder
+            .api(self.clone())
+            .grant_type(GRANT_TYPE_AUTHORIZATION_CODE)
+            .client_id(self.0.client_id.clone())
+            .code(code)
+            .code_verifier(code_verifier);
+        Ok(builder)
+    }
+
     /// Request an access token using the user's credentials, implementation of [resource owner password].
     ///
     /// [resource owner password]: https://auth0.com/docs/api/authentication?javascript#resource-owner-password
@@ -205,6 +248,48 @@ impl<'a> GetToken<'a> {
     /// Send the API request.
     pub async fn send(&self) -> Result<models::AccessToken> {
         self.api.http_post(GET_TOKEN_ENDPOINT, self).await
+    }
+}
+
+/// Request an access token using an authorization token.
+#[serde_as]
+#[serde_with::apply(
+    Option => #[serde(skip_serializing_if = "Option::is_none")],
+    Vec => #[serde(skip_serializing_if = "Vec::is_empty")],
+)]
+#[derive(Builder, Debug, Serialize)]
+#[builder(build_fn(private, error = "anyhow::Error"))]
+#[builder(derive(Debug))]
+pub struct AuthorizationCodeLogin {
+    #[builder(private)]
+    #[serde(skip)]
+    api: AuthenticationApi,
+    /// Denotes the flow you are using.
+    #[builder(private)]
+    grant_type: &'static str,
+    /// Application's Client ID.
+    #[builder(private)]
+    client_id: String,
+    /// Application's Client Secret.
+    #[builder(private, default)]
+    client_secret: Option<String>,
+    /// The Authorization Code received from the initial `/authorize` call.
+    #[builder(private, setter(into))]
+    code: String,
+    /// Cryptographically random key that was used to generate the `code_challenge` passed to
+    /// `/authorize`.
+    #[builder(private, setter(strip_option, into), default)]
+    code_verifier: Option<String>,
+    /// This is required only if it was set at the GET /authorize endpoint. The values must match.
+    #[builder(setter(strip_option, into), default)]
+    redirect_uri: Option<String>,
+}
+
+impl AuthorizationCodeLoginBuilder {
+    /// Send the API request.
+    pub async fn send(&self) -> Result<models::AccessToken> {
+        let request = self.build()?;
+        request.api.http_post(GET_TOKEN_ENDPOINT, &request).await
     }
 }
 
