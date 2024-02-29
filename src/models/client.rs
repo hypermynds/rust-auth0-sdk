@@ -7,7 +7,7 @@ use super::{EncryptionKey, JwtConfiguration, OidcLogoutConfig, SigningKey};
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Client {
     /// ID of this client.
-    pub client_id: String,
+    pub client_id: Option<String>,
     /// Name of the tenant this client belongs to.
     #[serde(default)]
     pub tenant: Option<String>,
@@ -22,9 +22,9 @@ pub struct Client {
     #[serde(default)]
     pub global: Option<bool>,
     /// Client secret.
-    pub client_secret: String,
+    pub client_secret: Option<String>,
     /// Type of client used to determine which settings are applicable.
-    pub app_type: String,
+    pub app_type: Option<String>,
     /// URL of the logo to display for this client.
     #[serde(default)]
     pub logo_uri: Option<String>,
@@ -76,7 +76,7 @@ pub struct Client {
     #[serde(default)]
     pub sso: Option<bool>,
     /// Whether Single Sign On is disabled.
-    pub sso_disabled: bool,
+    pub sso_disabled: Option<bool>,
     /// Whether this client can be used to make cross-origin authentication requests.
     #[serde(default)]
     pub cross_origin_authentication: Option<bool>,
@@ -102,7 +102,7 @@ pub struct Client {
     #[serde(default)]
     pub addons: Option<JsonValue>,
     /// Defines the requested authentication method for the token endpoint.
-    pub token_endpoint_auth_method: String,
+    pub token_endpoint_auth_method: Option<String>,
     /// Metadata associated with the client.
     #[serde(default)]
     pub client_metadata: Option<JsonValue>,
