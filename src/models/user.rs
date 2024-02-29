@@ -8,7 +8,7 @@ use super::Identity;
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct User {
     /// ID of the user which can be used when interacting with other APIs.
-    pub user_id: String,
+    pub user_id: Option<String>,
     /// Email address of this user.
     #[serde(default)]
     pub email: Option<String>,
@@ -25,10 +25,10 @@ pub struct User {
     #[serde(default)]
     pub phone_verified: Option<bool>,
     /// Date and time when this user was created.
-    #[serde(with = "time::serde::iso8601::option", default)]
+    #[serde(with = "time::serde::rfc3339::option", default)]
     pub created_at: Option<OffsetDateTime>,
     /// Date and time when this user was last updated/modified.
-    #[serde(with = "time::serde::iso8601::option", default)]
+    #[serde(with = "time::serde::rfc3339::option", default)]
     pub updated_at: Option<OffsetDateTime>,
     /// Array of user identity objects when accounts are linked.
     #[serde(default)]
@@ -55,13 +55,13 @@ pub struct User {
     #[serde(default)]
     pub last_ip: Option<String>,
     /// Last date and time this user logged in.
-    #[serde(with = "time::serde::iso8601::option", default)]
+    #[serde(with = "time::serde::rfc3339::option", default)]
     pub last_login: Option<OffsetDateTime>,
     /// Lasta date and time this user reset their password.
-    #[serde(with = "time::serde::iso8601::option", default)]
+    #[serde(with = "time::serde::rfc3339::option", default)]
     pub last_password_reset: Option<OffsetDateTime>,
     /// Total number of logins this user has performed.
-    pub logins_count: usize,
+    pub logins_count: Option<usize>,
     /// Whether this user was blocked by an administrator.
     #[serde(default)]
     pub blocked: Option<bool>,
